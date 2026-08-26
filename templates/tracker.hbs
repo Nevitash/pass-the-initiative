@@ -1,0 +1,76 @@
+<div class="pti-container">
+    {{#if hasCombat}}
+    <h3 class="pti-round-header">Round {{round}}</h3>
+    <div class="pti-actors-list">
+        {{#each combatants}}
+        <div
+            class="pti-actor flexrow {{#if isActive}}pti-active{{/if}} {{#if takenOut}}pti-taken-out{{/if}} {{#if acted}}pti-acted{{/if}}">
+
+            <img class="pti-actor-img" src="{{img}}" alt="{{name}}" />
+
+            <div class="pti-actor-name">
+                <strong>{{name}}</strong>
+                {{#if takenOut}}<span class="pti-status">(Taken Out)</span>{{/if}}
+            </div>
+
+            <div class="pti-controls flexrow">
+                <!-- Multi-turn tracking -->
+                <div class="pti-turn-counter">
+                    <button type="button" data-action="decreaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
+                            class="fas fa-minus"></i></button>
+                    <span>{{turnsTotal}}</span>
+                    <button type="button" data-action="increaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
+                            class="fas fa-plus"></i></button>
+                </div>
+
+                <!-- Start Turn -->
+                <button type="button" data-action="startTurn" data-id="{{id}}" class="pti-icon-btn" title="Start Turn"
+                    {{#unless canAct}}disabled{{/unless}}>
+                    <i class="fas fa-play"></i>
+                </button>
+
+                <!-- Taken Out Toggle -->
+                <button type="button" data-action="toggleTakenOut" data-id="{{id}}" class="pti-icon-btn"
+                    title="Taken Out">
+                    <i class="fas fa-skull"></i>
+                </button>
+
+                <!-- Remove -->
+                <button type="button" data-action="removeActor" data-id="{{id}}" class="pti-icon-btn pti-danger"
+                    title="Remove from Encounter">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        {{else}}
+        <p class="pti-empty">No actors in the encounter.</p>
+        {{/each}}
+    </div>
+
+    <hr>
+
+    <hr>
+
+    <div class="pti-footer flexcol">
+        <div class="flexrow">
+            <button type="button" data-action="nextRound"><i class="fas fa-forward"></i> Next Round</button>
+            <button type="button" data-action="skipRemaining"><i class="fas fa-fast-forward"></i> Skip
+                Remaining</button>
+        </div>
+        <div class="flexrow">
+            {{#if isGM}}
+            <button type="button" data-action="showPlayers" class="pti-show-players"><i class="fas fa-eye"></i> Show to
+                Players</button>
+            {{/if}}
+        </div>
+        {{#if hasSkipped}}
+        <button type="button" data-action="undoSkip" class="pti-undo"><i class="fas fa-undo"></i> Undo Skip</button>
+        {{/if}}
+        <button type="button" data-action="clearAll" class="pti-danger"><i class="fas fa-dumpster"></i> Clear All
+            Actors</button>
+    </div>
+
+    {{else}}
+    <p style="text-align:center;">No active combat encounter. Start an encounter first!</p>
+    {{/if}}
+</div>
