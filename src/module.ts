@@ -1,5 +1,7 @@
 import { PassTheInitiativeApp } from "./app";
 import { logger } from "./logger";
+import { controlUtils } from "./utils/compability.utils";
+
 import "./style.css"; // Instructs Vite to compile our CSS
 
 const foundryHooks = Hooks as any;
@@ -11,18 +13,7 @@ foundryHooks.once("init", () => {
 // Add a button to the Token Controls on the left side of the screen
 foundryHooks.on("getSceneControlButtons", (controls: any) => {
   try {
-    let tokenControls;
-    
-    // Safely handle different Foundry versions
-    // V13 renamed this from "token" to "tokens"
-    if (Array.isArray(controls)) {
-      tokenControls = controls.find((c: any) => c.name === "token" || c.name === "tokens" || c.id === "tokens");
-    } else if (controls?.has && controls?.get) {
-      tokenControls = controls.get("tokens") || controls.get("token"); 
-    } else if (controls) {
-      // V13 direct dictionary access
-      tokenControls = controls["tokens"] || controls["token"] || Object.values(controls).find((c: any) => c && (c.name === "tokens" || c.name === "token"));
-    }
+    let tokenControls = controlUtils.getTokenControls(controls);
 
     if (tokenControls && tokenControls.tools) {
       const ptiTool = {
@@ -32,20 +23,11 @@ foundryHooks.on("getSceneControlButtons", (controls: any) => {
         button: true,
         visible: true, // Force visibility early
         onClick: () => {
-          if (game?.user?.isGM) {
-            PassTheInitiativeApp.toggle();
-          } else {
-            ui.notifications?.warn("Only the GM can use Pass the Initiative.");
-          }
+          PassTheInitiativeApp.toggle();
         }
       };
 
-      // V13 changed `tools` from an Array to an Object
-      if (Array.isArray(tokenControls.tools)) {
-        tokenControls.tools.push(ptiTool); // V11/V12 Fallback
-      } else {
-        tokenControls.tools["pass-the-initiative"] = ptiTool; // V13 Approach
-      }
+      controlUtils.addTokenButton(controls, ptiTool);
 
       console.log("Pass the Initiative | Successfully injected button!");
     } else {
