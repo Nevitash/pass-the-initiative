@@ -4,12 +4,22 @@ on:
   push:
     branches:
       - 'release/**'
+  pull_request:
+    types:
+      - closed
+    branches:
+      - master
 
 permissions:
   contents: write
 
 jobs:
   release:
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref_name, 'release/')) ||
+      (github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/'))
     runs-on: ubuntu-latest
     env:
       ZIP_NAME: pass-the-initiative.zip
@@ -27,7 +37,15 @@ jobs:
       - name: Derive release tag
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME#release/}"
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            TAG="${TAG#release/}-nightly"
+            echo "IS_NIGHTLY=true" >> "$GITHUB_ENV"
+          else
+            TAG="${{ github.event.pull_request.head.ref }}"
+            TAG="${TAG#release/}"
+            echo "IS_NIGHTLY=false" >> "$GITHUB_ENV"
+          fi
           if [[ "$TAG" != v* ]]; then
             echo "Release branches must use the format release/vX.Y.Z"
             exit 1
@@ -59,7 +77,14 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$ZIP_NAME" --clobber
           else
-            gh release create "$TAG" "$ZIP_NAME" \
-              --title "Pass the Initiative $TAG" \
-              --generate-notes
+            if [[ "$IS_NIGHTLY" == "true" ]]; then
+              gh release create "$TAG" "$ZIP_NAME" \
+                --title "Pass the Initiative $TAG" \
+                --prerelease \
+                --generate-notes
+            else
+              gh release create "$TAG" "$ZIP_NAME" \
+                --title "Pass the Initiative $TAG" \
+                --generate-notes
+            fi
           fi
