@@ -56,7 +56,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         for (const effect of renderedEffects) {
             const resource = effect.texture?.baseTexture?.resource;
             const icon = resource?.src ?? resource?.url;
-            if (icon) effects.push({ icon, name: "Token effect" });
+            if (icon) effects.push({ icon, name: game.i18n?.localize("PTI.TOKEN_EFFECT") ?? "Token effect" });
         }
 
         return effects.filter((effect, index, allEffects) =>
@@ -67,7 +67,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
     static DEFAULT_OPTIONS = {
         id: "pass-the-initiative-app",
         classes: ["pass-the-initiative"],
-        title: "Pass the Initiative",
+        title: "PTI.TITLE",
         position: { width: 700, height: 600 },
         window: {
             resizable: true

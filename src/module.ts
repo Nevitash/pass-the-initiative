@@ -11,9 +11,12 @@ const MODULE_ID = "pass-the-initiative";
 foundryHooks.once("init", () => {
   logger.info("Initialized.");
   Handlebars.registerHelper("canViewCombatant", (isHidden: boolean, isGM: boolean) => isGM || !isHidden);
+  Handlebars.registerHelper("dispositionLabel", (disposition: string) =>
+    game.i18n?.localize(`PTI.DISPOSITION.${disposition.toUpperCase()}`) ?? disposition
+  );
   (game.settings as any).register(MODULE_ID, "enableLogging", {
-    name: "Enable Logging",
-    hint: "Enable Pass the Initiative messages in the browser console.",
+    name: "PTI.SETTINGS.ENABLE_LOGGING.NAME",
+    hint: "PTI.SETTINGS.ENABLE_LOGGING.HINT",
     scope: "world",
     config: true,
     type: Boolean,
@@ -21,32 +24,32 @@ foundryHooks.once("init", () => {
     onChange: (enabled: boolean) => logger.setEnabled(enabled)
   });
   (game.settings as any).register(MODULE_ID, "minimumLogLevel", {
-    name: "Minimum Log Level",
-    hint: "Only show messages at this level or above.",
+    name: "PTI.SETTINGS.MINIMUM_LOG_LEVEL.NAME",
+    hint: "PTI.SETTINGS.MINIMUM_LOG_LEVEL.HINT",
     scope: "world",
     config: true,
     type: String,
     choices: {
-      trace: "Trace",
-      debug: "Debug",
-      info: "Info",
-      warn: "Warning",
-      error: "Error"
+      trace: "PTI.LOG_LEVEL.TRACE",
+      debug: "PTI.LOG_LEVEL.DEBUG",
+      info: "PTI.LOG_LEVEL.INFO",
+      warn: "PTI.LOG_LEVEL.WARN",
+      error: "PTI.LOG_LEVEL.ERROR"
     },
     default: "trace",
     onChange: (level: string) => logger.setLevel(level as any)
   });
   (game.settings as any).register(MODULE_ID, "centerTokenForAll", {
-    name: "Center Token for All Players",
-    hint: "Center the map for all players when a turn starts or a combatant is marked taken out.",
+    name: "PTI.SETTINGS.CENTER_TOKEN.NAME",
+    hint: "PTI.SETTINGS.CENTER_TOKEN.HINT",
     scope: "world",
     config: true,
     type: Boolean,
     default: true
   });
   (game.settings as any).register(MODULE_ID, "openTrackerForAll", {
-    name: "Open Tracker for All Players",
-    hint: "Open the initiative tracker for all players when a turn starts or the round changes.",
+    name: "PTI.SETTINGS.OPEN_TRACKER.NAME",
+    hint: "PTI.SETTINGS.OPEN_TRACKER.HINT",
     scope: "world",
     config: true,
     type: Boolean,
@@ -68,7 +71,7 @@ foundryHooks.on("getSceneControlButtons", (controls: any) => {
     if (tokenControls && tokenControls.tools) {
       const ptiTool = {
         name: "pass-the-initiative",
-        title: "Pass the Initiative",
+        title: "PTI.TITLE",
         icon: "fas fa-users",
         button: true,
         visible: true, // Force visibility early
