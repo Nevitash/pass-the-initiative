@@ -189,6 +189,9 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
     static focusToken(id: string, tokenId?: string) {
         const combatant = game.combat?.combatants.get(id);
         const tokenDocument = combatant?.token as any;
+        if (!game.user?.isGM && tokenDocument?.hidden) {
+            return;
+        }
         const resolvedTokenId = tokenId ?? combatant?.tokenId ?? tokenDocument?.id;
         const tokenObj = canvas?.tokens?.get(resolvedTokenId) ?? tokenDocument?.object;
         if (!tokenObj) {
