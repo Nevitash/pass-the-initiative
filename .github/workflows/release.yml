@@ -1,0 +1,65 @@
+name: Release Foundry Module
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      ZIP_NAME: pass-the-initiative.zip
+
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Derive release tag
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#release/}"
+          if [[ "$TAG" != v* ]]; then
+            echo "Release branches must use the format release/vX.Y.Z"
+            exit 1
+          fi
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build module
+        run: npm run build
+
+      - name: Create Foundry package
+        shell: bash
+        run: |
+          mkdir package
+          jq --arg version "${TAG#v}" \
+            --arg download "https://github.com/Nevitash/pass-the-initiative/releases/download/${TAG}/${ZIP_NAME}" \
+            '.version = $version | .download = $download' \
+            module.json > package/module.json
+          cp -r dist lang templates package/
+          cd package
+          zip -r "../${ZIP_NAME}" .
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP_NAME" --clobber
+          else
+            gh release create "$TAG" "$ZIP_NAME" \
+              --title "Pass the Initiative $TAG" \
+              --generate-notes
+          fi

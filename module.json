@@ -25,7 +25,7 @@
       "path": "lang/en.json"
     }
   ],
-  "url": "",
-  "manifest": "",
-  "download": ""
+  "url": "https://github.com/Nevitash/pass-the-initiative",
+  "manifest": "https://raw.githubusercontent.com/Nevitash/pass-the-initiative/main/module.json",
+  "download": "https://github.com/Nevitash/pass-the-initiative/releases/download/v0.1.0/pass-the-initiative.zip"
 }
