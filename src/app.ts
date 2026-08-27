@@ -5,6 +5,7 @@ type TrackerCombatant = {
     id: string;
     name: string;
     img: string;
+    disposition: number;
     acted: boolean;
     takenOut: boolean;
     isActive: boolean;
@@ -57,7 +58,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
             skipRemaining: this.skipRemaining,
             undoSkip: this.undoSkip,
             clearAll: this.clearAll,
-            showPlayers: this.showPlayers
+            showPlayers: this.showPlayers,
         }
     };
 
@@ -75,7 +76,6 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
 
         const activeTurnId = combat.getFlag("pass-the-initiative", "activeTurnId");
         const skippedData = combat.getFlag("pass-the-initiative", "skipped") || [];
-
         const combatants: TrackerCombatant[] = combat.combatants.map((c: any) => {
             const flags = c.flags["pass-the-initiative"] || {};
             const turnsTotal = flags.turnsTotal ?? 1;
@@ -89,6 +89,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
                 id: c.id,
                 name: c.name,
                 img: c.img,
+                disposition: c.token?.disposition ?? 0,
                 acted,
                 takenOut,
                 isActive,
@@ -100,6 +101,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
 
         // Sort by name alphabetically
         combatants.sort((a: TrackerCombatant, b: TrackerCombatant) => a.name.localeCompare(b.name));
+        let groupedCombatants = PassTheInitiativeApp.routeCombatants(combatants);
         logger.debug("Tracker context prepared.", {
             combatantCount: combatants.length,
             round: combat.round,
@@ -107,12 +109,31 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         });
 
         return {
-            combatants,
+            groupedCombatants,
             hasCombat: true,
             round: combat.round,
             isGM: game.user?.isGM,
             hasSkipped: Array.isArray(skippedData) && skippedData.length > 0
         };
+    }
+
+    static routeCombatants(combatants: TrackerCombatant[]): Record<"friendly" | "neutral" | "hostile", TrackerCombatant[]> {
+        const routedCombatants: Record<"friendly" | "neutral" | "hostile", TrackerCombatant[]> = {
+            friendly: [],
+            hostile: [],
+            neutral: []
+        };
+
+        for (const combatant of combatants) {
+            const disposition = combatant.disposition === 1
+                ? "friendly"
+                : combatant.disposition === -1
+                    ? "hostile"
+                    : "neutral";
+            routedCombatants[disposition].push(combatant);
+        }
+
+        return routedCombatants;
     }
 
     /* ------------------------------------ */

@@ -2,55 +2,52 @@
     {{#if hasCombat}}
     <h3 class="pti-round-header">Round {{round}}</h3>
     <div class="pti-actors-list">
-        {{#each combatants}}
-        <div
-            class="pti-actor flexrow {{#if isActive}}pti-active{{/if}} {{#if takenOut}}pti-taken-out{{/if}} {{#if acted}}pti-acted{{/if}}">
+        {{#each groupedCombatants}}
+        {{#if this}}
+        <section class="pti-combatant-group">
+            <h4 class="pti-group-header">{{@key}}</h4>
+            <div class="pti-actors-grid">
+                {{#each this}}
+                <article
+                    class="pti-actor {{#if isActive}}pti-active{{/if}} {{#if takenOut}}pti-taken-out{{/if}} {{#if acted}}pti-acted{{/if}}">
+                    <div class="pti-actor-name">
+                        <strong>{{name}}</strong>
+                        {{#if takenOut}}<span class="pti-status">(Taken Out)</span>{{/if}}
+                    </div>
 
-            <img class="pti-actor-img" src="{{img}}" alt="{{name}}" />
+                    <div class="pti-actor-main">
+                        <img class="pti-actor-img" src="{{img}}" alt="{{name}}" />
 
-            <div class="pti-actor-name">
-                <strong>{{name}}</strong>
-                {{#if takenOut}}<span class="pti-status">(Taken Out)</span>{{/if}}
+                        <div class="pti-turn-counter">
+                            <button type="button" data-action="decreaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
+                                    class="fas fa-minus"></i></button>
+                            <span>{{turnsTotal}}</span>
+                            <button type="button" data-action="increaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
+                                    class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="pti-controls">
+                        <button type="button" data-action="startTurn" data-id="{{id}}" class="pti-icon-btn"
+                            title="Start Turn" {{#unless canAct}}disabled{{/unless}}>
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button type="button" data-action="toggleTakenOut" data-id="{{id}}" class="pti-icon-btn"
+                            title="Taken Out">
+                            <i class="fas fa-skull"></i>
+                        </button>
+                        <button type="button" data-action="removeActor" data-id="{{id}}" class="pti-icon-btn pti-danger"
+                            title="Remove from Encounter">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </article>
+                {{/each}}
             </div>
-
-            <div class="pti-controls flexrow">
-                <!-- Multi-turn tracking -->
-                <div class="pti-turn-counter">
-                    <button type="button" data-action="decreaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
-                            class="fas fa-minus"></i></button>
-                    <span>{{turnsTotal}}</span>
-                    <button type="button" data-action="increaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
-                            class="fas fa-plus"></i></button>
-                </div>
-
-                <!-- Start Turn -->
-                <button type="button" data-action="startTurn" data-id="{{id}}" class="pti-icon-btn" title="Start Turn"
-                    {{#unless canAct}}disabled{{/unless}}>
-                    <i class="fas fa-play"></i>
-                </button>
-
-                <!-- Taken Out Toggle -->
-                <button type="button" data-action="toggleTakenOut" data-id="{{id}}" class="pti-icon-btn"
-                    title="Taken Out">
-                    <i class="fas fa-skull"></i>
-                </button>
-
-                <!-- Remove -->
-                <button type="button" data-action="removeActor" data-id="{{id}}" class="pti-icon-btn pti-danger"
-                    title="Remove from Encounter">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-        {{else}}
-        <p class="pti-empty">No actors in the encounter.</p>
+        </section>
+        {{/if}}
         {{/each}}
     </div>
-
-    <hr>
-
-    <hr>
-
     <div class="pti-footer flexcol">
         <div class="flexrow">
             <button type="button" data-action="nextRound"><i class="fas fa-forward"></i> Next Round</button>
