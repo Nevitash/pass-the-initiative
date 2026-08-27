@@ -10,8 +10,10 @@ const levelRank: Record<LogLevel, number> = {
 };
 
 let minimumLevel: LogLevel = "trace";
+let loggingEnabled = true;
 
 function write(level: LogLevel, message: string, details?: unknown): void {
+    if (!loggingEnabled) return;
     if (levelRank[level] < levelRank[minimumLevel]) return;
 
     const output = details === undefined
@@ -26,6 +28,12 @@ function write(level: LogLevel, message: string, details?: unknown): void {
 }
 
 export const logger = {
+    setEnabled(enabled: boolean): void {
+        loggingEnabled = enabled;
+    },
+    isEnabled(): boolean {
+        return loggingEnabled;
+    },
     setLevel(level: LogLevel): void {
         minimumLevel = level;
         write("info", `Minimum log level set to ${level}.`);

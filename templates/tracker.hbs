@@ -8,26 +8,40 @@
             <h4 class="pti-group-header">{{@key}}</h4>
             <div class="pti-actors-grid">
                 {{#each this}}
+                {{#if (canViewCombatant isHidden @root.isGM)}}
                 <article
                     class="pti-actor {{#if isActive}}pti-active{{/if}} {{#if takenOut}}pti-taken-out{{/if}} {{#if acted}}pti-acted{{/if}}">
                     <div class="pti-actor-name">
                         <strong>{{name}}</strong>
-                        {{#if takenOut}}<span class="pti-status">(Taken Out)</span>{{/if}}
+                        <span class="pti-status-icons" title="Status">
+                            {{#each statusEffects}}
+                            <img class="pti-status-icon" src="{{icon}}" alt="{{name}}" title="{{name}}" />
+                            {{/each}}
+                            {{#if takenOut}}
+                            <i class="fas fa-skull" title="Taken out"></i>
+                            {{/if}}
+                            {{#if @root.isGM}}
+                            {{#if isHidden}}
+                            <i class="fas fa-eye-slash"></i>
+                            {{/if}}
+                            {{/if}}
+                        </span>
                     </div>
 
                     <div class="pti-actor-main">
                         <img class="pti-actor-img" src="{{img}}" alt="{{name}}" data-combatant-id="{{id}}" />
 
                         <div class="pti-turn-counter">
-                            <button type="button" data-action="decreaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
-                                    class="fas fa-minus"></i></button>
+                            {{#if @root.isGM}}<button type="button" data-action="decreaseTurns" data-id="{{id}}"
+                                class="pti-icon-btn"><i class="fas fa-minus"></i></button>{{/if}}
                             <span>{{turnsTotal}}</span>
-                            <button type="button" data-action="increaseTurns" data-id="{{id}}" class="pti-icon-btn"><i
-                                    class="fas fa-plus"></i></button>
+                            {{#if @root.isGM}}<button type="button" data-action="increaseTurns" data-id="{{id}}"
+                                class="pti-icon-btn"><i class="fas fa-plus"></i></button>{{/if}}
                         </div>
                     </div>
 
                     <div class="pti-controls">
+                        {{#if @root.isGM}}
                         <button type="button" data-action="startTurn" data-id="{{id}}" class="pti-icon-btn"
                             title="Start Turn" {{#unless canAct}}disabled{{/unless}}>
                             <i class="fas fa-play"></i>
@@ -40,14 +54,17 @@
                             title="Remove from Encounter">
                             <i class="fas fa-trash"></i>
                         </button>
+                        {{/if}}
                     </div>
                 </article>
+                {{/if}}
                 {{/each}}
             </div>
         </section>
         {{/if}}
         {{/each}}
     </div>
+    {{#if @root.isGM}}
     <div class="pti-footer flexcol">
         <div class="flexrow">
             <button type="button" data-action="nextRound"><i class="fas fa-forward"></i> Next Round</button>
@@ -62,6 +79,7 @@
         <button type="button" data-action="endEncounter" class="pti-danger"><i class="fas fa-stop"></i> End
             Encounter</button>
     </div>
+    {{/if}}
 
     {{else}}
     <p style="text-align:center;">No active combat encounter. Start an encounter first!</p>

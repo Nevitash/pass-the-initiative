@@ -107,6 +107,32 @@
     color: darkred;
 }
 
+.pti-status-icons {
+    display: flex;
+    max-width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    color: #666;
+    line-height: 1;
+}
+
+.pti-status-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+.pti-status-icons>i {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+}
+
 .pti-controls {
     display: grid;
     grid-template-rows: repeat(3, 28px);

@@ -10,6 +10,32 @@ const MODULE_ID = "pass-the-initiative";
 // Register settings during init so Foundry can show them in Module Settings.
 foundryHooks.once("init", () => {
   logger.info("Initialized.");
+  Handlebars.registerHelper("canViewCombatant", (isHidden: boolean, isGM: boolean) => isGM || !isHidden);
+  (game.settings as any).register(MODULE_ID, "enableLogging", {
+    name: "Enable Logging",
+    hint: "Enable Pass the Initiative messages in the browser console.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: (enabled: boolean) => logger.setEnabled(enabled)
+  });
+  (game.settings as any).register(MODULE_ID, "minimumLogLevel", {
+    name: "Minimum Log Level",
+    hint: "Only show messages at this level or above.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      trace: "Trace",
+      debug: "Debug",
+      info: "Info",
+      warn: "Warning",
+      error: "Error"
+    },
+    default: "trace",
+    onChange: (level: string) => logger.setLevel(level as any)
+  });
   (game.settings as any).register(MODULE_ID, "centerTokenForAll", {
     name: "Center Token for All Players",
     hint: "Center the map for all players when a turn starts or a combatant is marked taken out.",
@@ -28,6 +54,12 @@ foundryHooks.once("init", () => {
   });
 });
 
+// Read saved logging preferences after the world settings are available.
+foundryHooks.once("ready", () => {
+  logger.setEnabled((game.settings as any).get(MODULE_ID, "enableLogging"));
+  logger.setLevel((game.settings as any).get(MODULE_ID, "minimumLogLevel") as any);
+});
+
 // Add a button to the Token Controls on the left side of the screen
 foundryHooks.on("getSceneControlButtons", (controls: any) => {
   try {
@@ -40,7 +72,7 @@ foundryHooks.on("getSceneControlButtons", (controls: any) => {
         icon: "fas fa-users",
         button: true,
         visible: true, // Force visibility early
-        onClick: () => {
+        onChange: () => {
           PassTheInitiativeApp.toggle();
         }
       };
@@ -81,6 +113,11 @@ const refreshApp = (...args: unknown[]) => {
 
 foundryHooks.on("updateCombat", refreshApp);
 foundryHooks.on("updateCombatant", refreshApp);
+foundryHooks.on("updateToken", refreshApp);
+foundryHooks.on("refreshToken", refreshApp);
+foundryHooks.on("createActiveEffect", refreshApp);
+foundryHooks.on("updateActiveEffect", refreshApp);
+foundryHooks.on("deleteActiveEffect", refreshApp);
 foundryHooks.on("createCombatant", refreshApp);
 foundryHooks.on("deleteCombatant", refreshApp);
 foundryHooks.on("deleteCombat", refreshApp);

@@ -13,6 +13,8 @@ type TrackerCombatant = {
     turnsTotal: number;
     turnsTaken: number;
     canAct: boolean;
+    isHidden: boolean;
+    statusEffects: Array<{ icon: string; name: string }>;
 };
 
 
@@ -43,6 +45,23 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         if (this.instance?.rendered) {
             this.instance.render(); // false triggers a re-render without forcing it to the front
         }
+    }
+
+    /** Convert the token's status effects into icons the template can render. */
+    static getStatusEffects(combatant: any): Array<{ icon: string; name: string }> {
+        const effects: Array<{ icon: string; name: string }> = [];
+        const tokenObject = combatant.token?.object as any;
+        const renderedEffects = tokenObject?.effects?.children ?? [];
+
+        for (const effect of renderedEffects) {
+            const resource = effect.texture?.baseTexture?.resource;
+            const icon = resource?.src ?? resource?.url;
+            if (icon) effects.push({ icon, name: "Token effect" });
+        }
+
+        return effects.filter((effect, index, allEffects) =>
+            effect.icon && allEffects.findIndex((candidate) => candidate.icon === effect.icon) === index
+        );
     }
 
     static DEFAULT_OPTIONS = {
@@ -81,6 +100,10 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
 
             image.addEventListener("click", () => PassTheInitiativeApp.focusToken(id));
             image.addEventListener("dblclick", () => PassTheInitiativeApp.openActor(id));
+            image.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                PassTheInitiativeApp.openTokenMenu(id, event);
+            });
         });
     }
 
@@ -99,6 +122,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
             const turnsTotal = flags.turnsTotal ?? 1;
             const turnsTaken = flags.turnsTaken ?? 0;
             const takenOut = flags.takenOut ?? false;
+            const isHidden = c.token?.hidden ?? false;
 
             const acted = turnsTaken >= turnsTotal;
             const isActive = activeTurnId === c.id;
@@ -113,6 +137,8 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
                 isActive,
                 turnsTotal,
                 turnsTaken,
+                isHidden,
+                statusEffects: PassTheInitiativeApp.getStatusEffects(c),
                 canAct: !acted && !takenOut
             };
         });
@@ -198,6 +224,22 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
     static openActor(id: string) {
         const actor = game.combat?.combatants.get(id)?.actor as any;
         actor?.sheet?.render(true);
+    }
+
+    /** Forward a tracker image right-click to Foundry's native token HUD/menu. */
+    static openTokenMenu(id: string, event: MouseEvent) {
+        const combatant = game.combat?.combatants.get(id) as any;
+        const tokenDocument = combatant?.token;
+        const tokenObj = canvas?.tokens?.get(combatant?.tokenId ?? tokenDocument?.id) ?? tokenDocument?.object;
+        if (!tokenObj) return;
+
+        if (typeof tokenObj._onClickRight === "function") {
+            tokenObj._onClickRight(event);
+            return;
+        }
+
+        tokenObj.control?.({ releaseOthers: true });
+        tokenObj.toggleHUD?.();
     }
 
     /** End the active encounter and close this tracker window. */
