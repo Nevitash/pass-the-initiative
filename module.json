@@ -26,6 +26,6 @@
     }
   ],
   "url": "https://github.com/Nevitash/pass-the-initiative",
-  "manifest": "https://raw.githubusercontent.com/Nevitash/pass-the-initiative/main/module.json",
+  "manifest": "https://raw.githubusercontent.com/Nevitash/pass-the-initiative/master/module.json",
   "download": "https://github.com/Nevitash/pass-the-initiative/releases/download/v0.2.0/pass-the-initiative.zip"
 }
