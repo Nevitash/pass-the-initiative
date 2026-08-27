@@ -5,9 +5,26 @@ import { controlUtils } from "./utils/compability.utils";
 import "./style.css"; // Instructs Vite to compile our CSS
 
 const foundryHooks = Hooks as any;
+const MODULE_ID = "pass-the-initiative";
 
 foundryHooks.once("init", () => {
   logger.info("Initialized.");
+  (game.settings as any).register(MODULE_ID, "centerTokenForAll", {
+    name: "Center Token for All Players",
+    hint: "Center the map for all players when a turn starts or a combatant is marked taken out.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true
+  });
+  (game.settings as any).register(MODULE_ID, "openTrackerForAll", {
+    name: "Open Tracker for All Players",
+    hint: "Open the initiative tracker for all players when a turn starts or the round changes.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true
+  });
 });
 
 // Add a button to the Token Controls on the left side of the screen
@@ -38,15 +55,6 @@ foundryHooks.on("getSceneControlButtons", (controls: any) => {
   }
 });
 
-// Listen for manual GM broadcasts to show the app
-foundryHooks.once("ready", () => {
-  game.socket?.on("module.pass-the-initiative", (data: any) => {
-    if (data.action === "showApp") {
-      PassTheInitiativeApp.toggle(true);
-    }
-  });
-});
-
 // Automatically refresh the UI, and auto-focus if a new turn/round starts
 foundryHooks.on("updateCombat", (combat: any, changes: any) => {
   PassTheInitiativeApp.refresh();
@@ -55,9 +63,18 @@ foundryHooks.on("updateCombat", (combat: any, changes: any) => {
   const isRoundChange = changes.round !== undefined;
   const isTurnChange = changes.flags?.["pass-the-initiative"]?.activeTurnId !== undefined;
 
-  if (isRoundChange || isTurnChange) {
+  const shouldOpenTracker = game.user?.isGM || (game.settings as any).get(MODULE_ID, "openTrackerForAll");
+  if ((isRoundChange || isTurnChange) && shouldOpenTracker) {
     PassTheInitiativeApp.toggle(true); // Forces the window open and to the front for ALL players
   }
+});
+
+foundryHooks.once("ready", () => {
+  game.socket?.on(`module.${MODULE_ID}`, (data: any) => {
+    if (data?.action === "focusToken" && typeof data.id === "string") {
+      PassTheInitiativeApp.focusToken(data.id, data.tokenId);
+    }
+  });
 });
 
 // Listeners to re-render the app instantly when the encounter changes

@@ -43,7 +43,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         id: "pass-the-initiative-app",
         classes: ["pass-the-initiative"],
         title: "Pass the Initiative",
-        position: { width: 420, height: "auto" as const },
+        position: { width: 700, height: 600 },
         window: {
             resizable: true
             // Removed the custom controls array so it behaves natively
@@ -58,13 +58,24 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
             skipRemaining: this.skipRemaining,
             undoSkip: this.undoSkip,
             clearAll: this.clearAll,
-            showPlayers: this.showPlayers,
+            endEncounter: this.endEncounter,
         }
     };
 
     static PARTS = {
         main: { template: "modules/pass-the-initiative/templates/tracker.hbs" }
     };
+
+    async _onRender(_context: any, _options: any): Promise<void> {
+        const element = (this as any).element as HTMLElement | undefined;
+        element?.querySelectorAll<HTMLImageElement>(".pti-actor-img").forEach((image) => {
+            const id = image.dataset.combatantId;
+            if (!id) return;
+
+            image.addEventListener("click", () => PassTheInitiativeApp.focusToken(id));
+            image.addEventListener("dblclick", () => PassTheInitiativeApp.openActor(id));
+        });
+    }
 
     async _prepareContext(_options: any): Promise<any> {
         const combat = game.combat;
@@ -140,13 +151,45 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
     /* Action Handlers                      */
     /* ------------------------------------ */
 
-    static async showPlayers(event: Event, target: HTMLElement) {
-        if (game?.user?.isGM) {
-            game.socket?.emit("module.pass-the-initiative", { action: "showApp" });
-            ui.notifications?.info("Initiative tracker shown to all players.");
-        } else {
-            ui.notifications?.warn("Only the GM can do this.");
+    static focusToken(id: string, tokenId?: string) {
+        const combatant = game.combat?.combatants.get(id);
+        const tokenDocument = combatant?.token as any;
+        const resolvedTokenId = tokenId ?? combatant?.tokenId ?? tokenDocument?.id;
+        const tokenObj = canvas?.tokens?.get(resolvedTokenId) ?? tokenDocument?.object;
+        if (!tokenObj) {
+            logger.warn("Cannot focus combatant because its token is not on the active canvas.", { id });
+            return;
         }
+
+        if (typeof tokenObj.control === "function") {
+            tokenObj.control({ releaseOthers: true });
+        }
+        if (canvas?.ready && typeof canvas.animatePan === "function") {
+            const center = tokenObj.center ?? { x: tokenObj.x, y: tokenObj.y };
+            canvas.animatePan({ x: center.x, y: center.y, duration: 250 });
+        }
+    }
+
+    static focusTokenForAll(id: string) {
+        PassTheInitiativeApp.focusToken(id);
+        if (game.user?.isGM && (game.settings as any).get("pass-the-initiative", "centerTokenForAll")) {
+            const combatant = game.combat?.combatants.get(id) as any;
+            const tokenId = combatant?.token?.id ?? combatant?.tokenId;
+            game.socket?.emit("module.pass-the-initiative", { action: "focusToken", id, tokenId });
+        }
+    }
+
+    static openActor(id: string) {
+        const actor = game.combat?.combatants.get(id)?.actor as any;
+        actor?.sheet?.render(true);
+    }
+
+    static async endEncounter() {
+        const combat = game.combat;
+        if (!combat) return;
+
+        await (combat as any).endCombat();
+        this.instance?.close();
     }
 
     static async startTurn(event: Event, target: HTMLElement) {
@@ -167,21 +210,11 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         const currentTaken = combatant.getFlag("pass-the-initiative", "turnsTaken") as number || 0;
         await combatant.setFlag("pass-the-initiative", "turnsTaken", currentTaken + 1);
         await combat.setFlag("pass-the-initiative", "activeTurnId", id);
+        const turn = (combat as any).turns?.findIndex((entry: any) => entry.id === id) ?? -1;
+        if (turn >= 0) await combat.update({ turn });
         logger.debug("Turn state updated.", { id, turnsTaken: currentTaken + 1 });
 
-        // Highlight/pan to token
-        // Highlight/pan to token safely bypassing TS strictness
-        const tokenObj = combatant.token?.object as any;
-
-        if (tokenObj && typeof tokenObj.control === "function") {
-            tokenObj.control({ releaseOthers: true });
-
-            // Pan to the token
-            if (canvas?.ready) {
-                canvas.animatePan({ x: tokenObj.x, y: tokenObj.y, duration: 250 });
-                logger.trace("Panned canvas to active token.", { id, x: tokenObj.x, y: tokenObj.y });
-            }
-        }
+        PassTheInitiativeApp.focusTokenForAll(id);
     }
 
     static async increaseTurns(event: Event, target: HTMLElement) {
@@ -219,6 +252,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         }
         const isOut = combatant.getFlag("pass-the-initiative", "takenOut") as boolean ?? false;
         await combatant.setFlag("pass-the-initiative", "takenOut", !isOut);
+        PassTheInitiativeApp.focusTokenForAll(combatant.id);
     }
 
     static async removeActor(event: Event, target: HTMLElement) {
