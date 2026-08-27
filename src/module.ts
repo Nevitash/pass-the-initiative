@@ -7,6 +7,7 @@ import "./style.css"; // Instructs Vite to compile our CSS
 const foundryHooks = Hooks as any;
 const MODULE_ID = "pass-the-initiative";
 
+// Register settings during init so Foundry can show them in Module Settings.
 foundryHooks.once("init", () => {
   logger.info("Initialized.");
   (game.settings as any).register(MODULE_ID, "centerTokenForAll", {
@@ -55,13 +56,11 @@ foundryHooks.on("getSceneControlButtons", (controls: any) => {
   }
 });
 
-// Automatically refresh the UI, and auto-focus if a new turn/round starts
+// Combat updates synchronize refreshes, optional player focus, and tracker opening.
 foundryHooks.on("updateCombat", (combat: any, changes: any) => {
-  PassTheInitiativeApp.refresh();
-
   // Check if this update specifically changed the round or started a new turn
   const isRoundChange = changes.round !== undefined;
-  const isTurnChange = changes.flags?.["pass-the-initiative"]?.activeTurnId !== undefined;
+  const isTurnChange = changes.flags?.[MODULE_ID]?.activeTurnId !== undefined;
   const focusRequest = changes.flags?.[MODULE_ID]?.focusRequest;
 
   if (focusRequest && (game.user?.isGM || (game.settings as any).get(MODULE_ID, "centerTokenForAll"))) {
@@ -85,9 +84,3 @@ foundryHooks.on("updateCombatant", refreshApp);
 foundryHooks.on("createCombatant", refreshApp);
 foundryHooks.on("deleteCombatant", refreshApp);
 foundryHooks.on("deleteCombat", refreshApp);
-
-// Standard refresh listeners
-foundryHooks.on("updateCombatant", () => PassTheInitiativeApp.refresh());
-foundryHooks.on("createCombatant", () => PassTheInitiativeApp.refresh());
-foundryHooks.on("deleteCombatant", () => PassTheInitiativeApp.refresh());
-foundryHooks.on("deleteCombat", () => PassTheInitiativeApp.refresh());

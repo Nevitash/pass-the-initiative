@@ -1,6 +1,7 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 import { logger } from "./logger";
 
+/** The small, template-friendly view model used by the tracker. */
 type TrackerCombatant = {
     id: string;
     name: string;
@@ -16,9 +17,14 @@ type TrackerCombatant = {
 
 
 
+/**
+ * ApplicationV2 window that renders and controls the initiative tracker.
+ * Foundry connects DEFAULT_OPTIONS.actions to data-action buttons in tracker.hbs.
+ */
 export class PassTheInitiativeApp extends HandlebarsApplicationMixin(ApplicationV2) {
     static instance: PassTheInitiativeApp | null = null;
 
+    /** Open the tracker, or close it when it is already open. */
     static toggle(forceOpen = false) {
         if (!this.instance) this.instance = new PassTheInitiativeApp();
         if (this.instance.rendered) {
@@ -67,6 +73,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
     };
 
     async _onRender(_context: any, _options: any): Promise<void> {
+        // Images need listeners here because a double-click is not a Foundry action.
         const element = (this as any).element as HTMLElement | undefined;
         element?.querySelectorAll<HTMLImageElement>(".pti-actor-img").forEach((image) => {
             const id = image.dataset.combatantId;
@@ -110,7 +117,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
             };
         });
 
-        // Sort by name alphabetically
+        // Sort first so actors have a stable order within each disposition.
         combatants.sort((a: TrackerCombatant, b: TrackerCombatant) => a.name.localeCompare(b.name));
         let groupedCombatants = PassTheInitiativeApp.routeCombatants(combatants);
         logger.debug("Tracker context prepared.", {
@@ -135,6 +142,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
             neutral: []
         };
 
+        // Foundry uses -1, 0, and 1 for hostile, neutral, and friendly.
         for (const combatant of combatants) {
             const disposition = combatant.disposition === 1
                 ? "friendly"
@@ -151,6 +159,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
     /* Action Handlers                      */
     /* ------------------------------------ */
 
+    /** Select a token on this client and pan the local canvas to its center. */
     static focusToken(id: string, tokenId?: string) {
         const combatant = game.combat?.combatants.get(id);
         const tokenDocument = combatant?.token as any;
@@ -170,11 +179,13 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         }
     }
 
+    /** Focus locally and request the same focus on every player client. */
     static async focusTokenForAll(id: string) {
         PassTheInitiativeApp.focusToken(id);
         if (game.user?.isGM && (game.settings as any).get("pass-the-initiative", "centerTokenForAll")) {
             const combatant = game.combat?.combatants.get(id) as any;
             const tokenId = combatant?.token?.id ?? combatant?.tokenId;
+            // Combat updates are synchronized by Foundry more reliably than a custom socket.
             await game.combat?.setFlag("pass-the-initiative", "focusRequest", {
                 combatantId: id,
                 tokenId,
@@ -183,11 +194,13 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         }
     }
 
+    /** Open the actor sheet associated with a combatant. */
     static openActor(id: string) {
         const actor = game.combat?.combatants.get(id)?.actor as any;
         actor?.sheet?.render(true);
     }
 
+    /** End the active encounter and close this tracker window. */
     static async endEncounter() {
         const combat = game.combat;
         if (!combat) return;
@@ -196,6 +209,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         this.instance?.close();
     }
 
+    /** Record a turn, select it in Foundry's combat tracker, and focus it. */
     static async startTurn(event: Event, target: HTMLElement) {
         const id = target.dataset.id;
         const combat = game.combat;
@@ -214,6 +228,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         const currentTaken = combatant.getFlag("pass-the-initiative", "turnsTaken") as number || 0;
         await combatant.setFlag("pass-the-initiative", "turnsTaken", currentTaken + 1);
         await combat.setFlag("pass-the-initiative", "activeTurnId", id);
+        // combat.turn indexes the sorted turns array, not combatants.contents.
         const turn = (combat as any).turns?.findIndex((entry: any) => entry.id === id) ?? -1;
         if (turn >= 0) await combat.update({ turn });
         logger.debug("Turn state updated.", { id, turnsTaken: currentTaken + 1 });
@@ -221,6 +236,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         await PassTheInitiativeApp.focusTokenForAll(id);
     }
 
+    /** Increase the number of turns this combatant may take this round. */
     static async increaseTurns(event: Event, target: HTMLElement) {
         const combatant = game.combat?.combatants.get(target.dataset.id!);
         logger.info("Increasing combatant turn total.", { id: target.dataset.id });
@@ -232,6 +248,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         await combatant.setFlag("pass-the-initiative", "turnsTotal", total + 1);
     }
 
+    /** Decrease the combatant's turn total, but never below one. */
     static async decreaseTurns(event: Event, target: HTMLElement) {
         const combatant = game.combat?.combatants.get(target.dataset.id!);
         logger.info("Decreasing combatant turn total.", { id: target.dataset.id });
@@ -247,6 +264,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         }
     }
 
+    /** Toggle the taken-out state, then focus the affected token. */
     static async toggleTakenOut(event: Event, target: HTMLElement) {
         const combatant = game.combat?.combatants.get(target.dataset.id!);
         logger.info("Toggling combatant taken-out state.", { id: target.dataset.id });
@@ -259,6 +277,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         await PassTheInitiativeApp.focusTokenForAll(combatant.id);
     }
 
+    /** Remove the selected combatant from the active encounter. */
     static async removeActor(event: Event, target: HTMLElement) {
         const combatant = game.combat?.combatants.get(target.dataset.id!);
         logger.info("Removing combatant.", { id: target.dataset.id });
@@ -269,6 +288,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         await combatant.delete();
     }
 
+    /** Start the next round and reset each combatant's turns taken. */
     static async nextRound() {
         const combat = game.combat;
         logger.info("Advancing to the next round.");
@@ -292,6 +312,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         logger.debug("Round advanced.", { round: combat.round + 1, resetCount: updates.length });
     }
 
+    /** Mark eligible remaining turns as skipped and remember what changed. */
     static async skipRemaining() {
         const combat = game.combat;
         logger.info("Skipping remaining combatant turns.");
@@ -324,6 +345,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         }
     }
 
+    /** Restore the turns recorded by skipRemaining. */
     static async undoSkip() {
         const combat = game.combat;
         logger.info("Undoing skipped turns.");
@@ -352,6 +374,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         logger.debug("Skipped turns restored.", { skippedCount: skipped.length, restoredCount: updates.length });
     }
 
+    /** Delete every combatant from the active encounter. */
     static async clearAll() {
         const combat = game.combat;
         logger.info("Clearing all combatants.");
