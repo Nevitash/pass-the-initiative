@@ -170,12 +170,16 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         }
     }
 
-    static focusTokenForAll(id: string) {
+    static async focusTokenForAll(id: string) {
         PassTheInitiativeApp.focusToken(id);
         if (game.user?.isGM && (game.settings as any).get("pass-the-initiative", "centerTokenForAll")) {
             const combatant = game.combat?.combatants.get(id) as any;
             const tokenId = combatant?.token?.id ?? combatant?.tokenId;
-            game.socket?.emit("module.pass-the-initiative", { action: "focusToken", id, tokenId });
+            await game.combat?.setFlag("pass-the-initiative", "focusRequest", {
+                combatantId: id,
+                tokenId,
+                requestId: foundry.utils.randomID()
+            });
         }
     }
 
@@ -214,7 +218,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         if (turn >= 0) await combat.update({ turn });
         logger.debug("Turn state updated.", { id, turnsTaken: currentTaken + 1 });
 
-        PassTheInitiativeApp.focusTokenForAll(id);
+        await PassTheInitiativeApp.focusTokenForAll(id);
     }
 
     static async increaseTurns(event: Event, target: HTMLElement) {
@@ -252,7 +256,7 @@ export class PassTheInitiativeApp extends HandlebarsApplicationMixin(Application
         }
         const isOut = combatant.getFlag("pass-the-initiative", "takenOut") as boolean ?? false;
         await combatant.setFlag("pass-the-initiative", "takenOut", !isOut);
-        PassTheInitiativeApp.focusTokenForAll(combatant.id);
+        await PassTheInitiativeApp.focusTokenForAll(combatant.id);
     }
 
     static async removeActor(event: Event, target: HTMLElement) {

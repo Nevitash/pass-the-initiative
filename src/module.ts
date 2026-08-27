@@ -62,19 +62,16 @@ foundryHooks.on("updateCombat", (combat: any, changes: any) => {
   // Check if this update specifically changed the round or started a new turn
   const isRoundChange = changes.round !== undefined;
   const isTurnChange = changes.flags?.["pass-the-initiative"]?.activeTurnId !== undefined;
+  const focusRequest = changes.flags?.[MODULE_ID]?.focusRequest;
+
+  if (focusRequest && (game.user?.isGM || (game.settings as any).get(MODULE_ID, "centerTokenForAll"))) {
+    PassTheInitiativeApp.focusToken(focusRequest.combatantId, focusRequest.tokenId);
+  }
 
   const shouldOpenTracker = game.user?.isGM || (game.settings as any).get(MODULE_ID, "openTrackerForAll");
   if ((isRoundChange || isTurnChange) && shouldOpenTracker) {
     PassTheInitiativeApp.toggle(true); // Forces the window open and to the front for ALL players
   }
-});
-
-foundryHooks.once("ready", () => {
-  game.socket?.on(`module.${MODULE_ID}`, (data: any) => {
-    if (data?.action === "focusToken" && typeof data.id === "string") {
-      PassTheInitiativeApp.focusToken(data.id, data.tokenId);
-    }
-  });
 });
 
 // Listeners to re-render the app instantly when the encounter changes
