@@ -4,7 +4,7 @@
     <div class="pti-actors-list">
         {{#each groupedCombatants}}
         {{#if this}}
-        <section class="pti-combatant-group">
+        <section class="pti-combatant-group pti-{{@key}}">
             <h4 class="pti-group-header">{{dispositionLabel @key}}</h4>
             <div class="pti-actors-grid">
                 {{#each this}}
@@ -13,16 +13,16 @@
                     class="pti-actor {{#if isActive}}pti-active{{/if}} {{#if takenOut}}pti-taken-out{{/if}} {{#if acted}}pti-acted{{/if}}">
                     <div class="pti-actor-name">
                         <strong>{{name}}</strong>
-                        <span class="pti-status-icons" title="{{localize "PTI.STATUS"}}">
+                        <span class="pti-status-icons" title="{{localize " PTI.STATUS"}}">
                             {{#each statusEffects}}
                             <img class="pti-status-icon" src="{{icon}}" alt="{{name}}" title="{{name}}" />
                             {{/each}}
                             {{#if takenOut}}
-                            <i class="fas fa-skull" title="{{localize "PTI.TAKEN_OUT}}"></i>
+                            <i class="fas fa-skull" title="{{localize " PTI.TAKEN_OUT"}}"></i>
                             {{/if}}
                             {{#if @root.isGM}}
                             {{#if isHidden}}
-                            <i class="fas fa-eye-slash" title="{{localize "PTI.HIDDEN}}"></i>
+                            <i class="fas fa-eye-slash" title="{{localize " PTI.HIDDEN"}}"></i>
                             {{/if}}
                             {{/if}}
                         </span>
@@ -43,15 +43,15 @@
                     <div class="pti-controls">
                         {{#if @root.isGM}}
                         <button type="button" data-action="startTurn" data-id="{{id}}" class="pti-icon-btn"
-                            title="{{localize "PTI.START_TURN"}}" {{#unless canAct}}disabled{{/unless}}>
+                            title="{{localize " PTI.START_TURN"}}" {{#unless canAct}}disabled{{/unless}}>
                             <i class="fas fa-play"></i>
                         </button>
                         <button type="button" data-action="toggleTakenOut" data-id="{{id}}" class="pti-icon-btn"
-                            title="{{localize "PTI.TOGGLE_TAKEN_OUT"}}">
+                            title="{{localize " PTI.TOGGLE_TAKEN_OUT"}}">
                             <i class="fas fa-skull"></i>
                         </button>
                         <button type="button" data-action="removeActor" data-id="{{id}}" class="pti-icon-btn pti-danger"
-                            title="{{localize "PTI.REMOVE_FROM_ENCOUNTER"}}">
+                            title="{{localize " PTI.REMOVE_FROM_ENCOUNTER"}}">
                             <i class="fas fa-trash"></i>
                         </button>
                         {{/if}}
@@ -67,14 +67,19 @@
     {{#if @root.isGM}}
     <div class="pti-footer flexcol">
         <div class="flexrow">
-            <button type="button" data-action="nextRound"><i class="fas fa-forward"></i> {{localize "PTI.NEXT_ROUND"}}</button>
-            <button type="button" data-action="skipRemaining"><i class="fas fa-fast-forward"></i> {{localize "PTI.SKIP_REMAINING"}}</button>
+            <button type="button" data-action="nextRound"><i class="fas fa-forward"></i> {{localize
+                "PTI.NEXT_ROUND"}}</button>
+            <button type="button" data-action="skipRemaining"><i class="fas fa-fast-forward"></i> {{localize
+                "PTI.SKIP_REMAINING"}}</button>
         </div>
         {{#if hasSkipped}}
-        <button type="button" data-action="undoSkip" class="pti-undo"><i class="fas fa-undo"></i> {{localize "PTI.UNDO_SKIP"}}</button>
+        <button type="button" data-action="undoSkip" class="pti-undo"><i class="fas fa-undo"></i> {{localize
+            "PTI.UNDO_SKIP"}}</button>
         {{/if}}
-        <button type="button" data-action="clearAll" class="pti-danger"><i class="fas fa-dumpster"></i> {{localize "PTI.CLEAR_ALL_ACTORS"}}</button>
-        <button type="button" data-action="endEncounter" class="pti-danger"><i class="fas fa-stop"></i> {{localize "PTI.END_ENCOUNTER"}}</button>
+        <button type="button" data-action="clearAll" class="pti-danger"><i class="fas fa-dumpster"></i> {{localize
+            "PTI.CLEAR_ALL_ACTORS"}}</button>
+        <button type="button" data-action="endEncounter" class="pti-danger"><i class="fas fa-stop"></i> {{localize
+            "PTI.END_ENCOUNTER"}}</button>
     </div>
     {{/if}}
 

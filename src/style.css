@@ -23,15 +23,15 @@
     border-radius: 4px;
 }
 
-.pti-combatant-group:nth-child(1) {
+.pti-combatant-group.pti-friendly {
     background: rgba(70, 170, 80, 0.3);
 }
 
-.pti-combatant-group:nth-child(2) {
+.pti-combatant-group.pti-hostile {
     background: rgba(210, 65, 60, 0.3);
 }
 
-.pti-combatant-group:nth-child(3) {
+.pti-combatant-group.pti-neutral {
     background: rgba(225, 190, 45, 0.35);
 }
 
