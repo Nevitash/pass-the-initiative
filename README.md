@@ -1,4 +1,4 @@
-﻿# Pass the Initiative _(pass-the-initiative)_
+# Pass the Initiative _(pass-the-initiative)_
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
@@ -26,18 +26,18 @@ Traditional TTRPG initiative uses static turn orders calculated once per combat 
 1. In Foundry VTT Setup, navigate to the **Add-on Modules** tab.
 2. Click **Install Module**.
 3. Search for `Pass the Initiative` or paste the manifest URL:
-   `
+   ```
    https://raw.githubusercontent.com/Nevitash/pass-the-initiative/master/module.json
-   `
+   ```
 4. Click **Install**.
 
 ### Development Setup
 
-`ash
+```bash
 npm install
 npm run link
 npm run dev
-`
+```
 
 The `npm run link` script creates a directory link into your local Foundry VTT user data modules directory.
 
