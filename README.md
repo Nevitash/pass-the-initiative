@@ -1,67 +1,61 @@
-# pass-the-initiative
+﻿# Pass the Initiative _(pass-the-initiative)_
 
-TypeScript starter for a Foundry VTT v13 module, built with Vite and typed against
-`fvtt-types`.
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-## First-time setup
+A Foundry VTT v13 module initiative tracker where the gamemaster decides combat turn order.
 
-```bash
+Pass the Initiative provides an alternative encounter flow for tabletop roleplaying in Foundry VTT. Instead of fixed initiative rolls, the GM or active participants pass the turn dynamically to the next actor.
+
+## Table of Contents
+
+- [Background](#background)
+- [Install](#install)
+- [Usage](#usage)
+- [Maintainers](#maintainers)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Background
+
+Traditional TTRPG initiative uses static turn orders calculated once per combat round. Pass the Initiative introduces dynamic pop-corn style or GM-adjudicated turn delegation, making tactical decisions and cinematic action sequences more flexible in Foundry Virtual Tabletop.
+
+## Install
+
+### Foundry VTT Module Browser
+
+1. In Foundry VTT Setup, navigate to the **Add-on Modules** tab.
+2. Click **Install Module**.
+3. Search for `Pass the Initiative` or paste the manifest URL:
+   `
+   https://raw.githubusercontent.com/Nevitash/pass-the-initiative/master/module.json
+   `
+4. Click **Install**.
+
+### Development Setup
+
+`ash
 npm install
 npm run link
-```
-
-`npm run link` creates a Windows junction from this project folder into:
-
-```
-C:\Users\seewa\AppData\Local\FoundryVTT\Data\modules\pass-the-initiative
-```
-
-so Foundry can see the module without you copying files manually. You only need
-to run this once (re-run if you delete the link).
-
-## Development
-
-```bash
 npm run dev
-```
+`
 
-This runs Vite in watch mode, rebuilding `dist/module.js` on every save. Reload
-your Foundry world (F5 in the browser, or the in-app "Reload" button) to pick up
-changes — Vite watch does not hot-reload into Foundry itself.
+The `npm run link` script creates a directory link into your local Foundry VTT user data modules directory.
 
-`npm run typecheck` runs the TypeScript compiler without emitting, useful as a
-quick sanity check or in CI.
+## Usage
 
-## Production build
+1. Open your Foundry VTT world.
+2. Enable **Pass the Initiative** under **Game Settings > Manage Modules**.
+3. Open the Combat Tracker encounter interface.
+4. Use the custom initiative buttons to designate and pass initiative to the next actor.
 
-```bash
-npm run build
-```
+## Maintainers
 
-Outputs a minified-free (source-mapped) bundle to `dist/`. Flip `minify: false`
-in `vite.config.ts` to `true` (or remove the line) when you're ready to ship.
+[@Nevitash](https://github.com/Nevitash)
 
-## Debugging in VS Code
+## Contributing
 
-1. Start Foundry and open your world in Chrome.
-2. In VS Code, go to Run & Debug and launch **"Launch Foundry (Chrome)"**
-   (defined in `.vscode/launch.json`). This attaches the debugger with
-   source maps, so you can set breakpoints directly in your `.ts` files.
+PRs accepted. Please open an issue first to discuss substantial workflow changes.
 
-## Renaming the module
+## License
 
-The placeholder ID is `pass-the-initiative`. To rename, update it in:
-
-- `module.json` (`id` field)
-- `package.json` (`name` field)
-- `scripts/link-module.mjs` (`MODULE_ID` constant)
-- `src/module.ts` (`MODULE_ID` constant)
-
-and rename the project folder itself if you'd like the folder name to match.
-
-## Notes on fvtt-types
-
-`fvtt-types` is community-maintained and v13 support is still filling in gaps.
-If something is untyped or behaves oddly, check the
-[League of Foundry Developers repo](https://github.com/League-of-Foundry-Developers/foundry-vtt-types)
-issues or their Discord before assuming it's a bug in your code.
+[MIT](LICENSE)
